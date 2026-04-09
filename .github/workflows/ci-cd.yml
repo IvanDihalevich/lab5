@@ -27,7 +27,6 @@ jobs:
         run: npm ci
 
       - name: Run Lint
-        # Якщо лінтер видасть помилку, GitHub просто піде далі
         run: npm run lint || true 
         continue-on-error: true
 
@@ -52,11 +51,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Цей крок переводить назву репозиторію в нижній регістр (для Docker)
+      - name: Downcase repo name
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          # Використовуємо підготовлену змінну REPO_NAME
+          tags: ghcr.io/${{ env.REPO_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
